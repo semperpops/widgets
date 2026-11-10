@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spotsylvania Weather</title>
+<style>
+  :root {
+    --bg: #1a1a1a;
+    --bg-elevated: #242424;
+    --gold: #d4af37;
+    --gold-soft: #c9a227;
+    --gold-dim: rgba(212, 175, 55, 0.35);
+    --text: #f5f5f5;
+    --text-muted: #a8a8a8;
+    --divider: rgba(212, 175, 55, 0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  [hidden] { display: none !important; }
+
+  html, body {
+    background: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .bar {
+    background: var(--bg);
+    border: 1px solid var(--gold-dim);
+    border-radius: 12px;
+    padding: 12px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 72px;
+  }
+
+  .message p {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text);
+  }
+
+  .place {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .now {
+    flex: 0 1 380px;
+    min-width: 240px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding-right: 14px;
+    border-right: 1px solid var(--divider);
+  }
+
+  .temp-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .temp {
+    font-size: 30px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  .cond-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .cond {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .icon {
+    color: var(--gold);
+    display: flex;
+    flex: 0 0 auto;
+  }
+
+  .icon svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 2px;
+  }
+
+  .meta span {
+    font-size: 12px;
+    color: var(--gold-soft);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .forecast {
+    flex: 1 1 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .forecast-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .group-label {
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  .credit {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .credit:hover { color: var(--gold-soft); }
+
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .day {
+    background: var(--bg-elevated);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 6px 4px 7px;
+    text-align: center;
+    min-width: 0;
+  }
+
+  .day.today {
+    border-color: var(--gold-dim);
+    box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.08);
+  }
+
+  .day .dow {
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .day.today .dow { color: var(--gold); }
+
+  .day .icon {
+    color: var(--gold-soft);
+    justify-content: center;
+    margin: 2px 0 1px;
+  }
+
+  .day.today .icon { color: var(--gold); }
+
+  .day .icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .day .hi {
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    color: var(--text);
+  }
+
+  .day .lo {
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    color: var(--text-muted);
+  }
+
+  .day .pop {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gold-soft);
+    line-height: 1.2;
+    margin-top: 1px;
+  }
+
+  @media (max-width: 1100px) {
+    .now {
+      border-right: none;
+      border-bottom: 1px solid var(--divider);
+      padding-right: 0;
+      padding-bottom: 8px;
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .bar { padding: 10px 10px 12px; gap: 8px; }
+    .temp { font-size: 28px; }
+    .cond { font-size: 14px; }
+    .day-grid { gap: 4px; }
+    .day { padding: 5px 2px 6px; }
+    .day .dow { letter-spacing: 0.04em; }
+    .day .hi { font-size: 12px; }
+    .day .lo { font-size: 10px; }
+    .day .icon svg { width: 18px; height: 18px; }
+    .meta span { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+  <div class="bar" role="region" aria-label="Weather for Spotsylvania, Virginia">
+    <div class="message" id="message" role="status">
+      <div class="place">Spotsylvania, VA</div>
+      <p id="messageText">Loading forecast…</p>
+    </div>
+
+    <div class="top-row" id="content" hidden>
+      <div class="now">
+        <div class="place">Spotsylvania, VA</div>
+        <div class="temp-row">
+          <div class="temp" id="temp">—</div>
+          <div class="cond-wrap">
+            <div class="icon" id="nowIcon"></div>
+            <div class="cond" id="cond">—</div>
+          </div>
+        </div>
+        <div class="meta">
+          <span id="feels">Feels like —</span>
+          <span id="wind">Wind —</span>
+          <span id="todayHl">Today —</span>
+          <span id="todayPop">Precip —</span>
+        </div>
+      </div>
+
+      <div class="forecast">
+        <div class="forecast-head">
+          <div class="group-label">Forecast</div>
+          <a class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+        </div>
+        <div class="day-grid" id="days"></div>
+      </div>
+    </div>
+  </div>
+
+  <noscript>
+    <div class="bar" role="region" aria-label="Weather for Spotsylvania, Virginia">
+      <div class="message">
+        <div class="place">Spotsylvania, VA</div>
+        <p>Weather needs JavaScript to load the forecast.</p>
+      </div>
+    </div>
+  </noscript>
+
+<script>
+(function () {
+  var LAT = 38.20;
+  var LON = -77.59;
+  var REFRESH_MS = 30 * 60 * 1000;
+  var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  var ENDPOINT = "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=" + LAT
+    + "&longitude=" + LON
+    + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+    + "&timezone=America%2FNew_York"
+    + "&temperature_unit=fahrenheit"
+    + "&wind_speed_unit=mph"
+    + "&precipitation_unit=inch"
+    + "&forecast_days=7";
+
+  var LABELS = {
+    0: "Clear",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Fog",
+    48: "Freezing fog",
+    51: "Light drizzle",
+    53: "Drizzle",
+    55: "Heavy drizzle",
+    56: "Freezing drizzle",
+    57: "Freezing drizzle",
+    61: "Light rain",
+    63: "Rain",
+    65: "Heavy rain",
+    66: "Freezing rain",
+    67: "Freezing rain",
+    71: "Light snow",
+    73: "Snow",
+    75: "Heavy snow",
+    77: "Snow grains",
+    80: "Light showers",
+    81: "Showers",
+    82: "Heavy showers",
+    85: "Snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm",
+    99: "Thunderstorm"
+  };
+
+  function svg(body) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + body + "</svg>";
+  }
+
+  var ICONS = {
+    sun: svg('<circle cx="12" cy="12" r="3.2"></circle><path d="M12 3.2v1.8M12 19v1.8M3.2 12h1.8M19 12h1.8M5.6 5.6l1.3 1.3M17.1 17.1l1.3 1.3M18.4 5.6l-1.3 1.3M6.9 17.1l-1.3 1.3"></path>'),
+    moon: svg('<path d="M15.5 3.8A7.2 7.2 0 1 0 20.2 16 5.6 5.6 0 0 1 15.5 3.8z"></path>'),
+    cloud: svg('<path d="M7 17.2h9.4a3.2 3.2 0 0 0 .4-6.4 4.6 4.6 0 0 0-8.8-1.4A3.2 3.2 0 0 0 7 17.2z"></path>'),
+    partly: svg('<circle cx="7.2" cy="7.2" r="2.1"></circle><path d="M7.2 3.4v1M7.2 10v1M3.4 7.2h1M10 7.2h1M4.7 4.7l.7.7M9.1 9.1l.6.6M9.7 4.7l-.7.7M5.4 9.1l-.6.6"></path><path d="M9.2 17.5h8a2.8 2.8 0 0 0 .3-5.6 4 4 0 0 0-6.6-1.4"></path>'),
+    nightPartly: svg('<path d="M8.6 3.8a3.4 3.4 0 1 0 3.2 5.4 2.5 2.5 0 0 1-3.2-5.4z"></path><path d="M9.4 17.6h8a2.8 2.8 0 0 0 .3-5.6 3.8 3.8 0 0 0-6.5-1.2"></path>'),
+    fog: svg('<path d="M4 8.5h16M4 12h16M6 15.5h12M8 19h8"></path>'),
+    rain: svg('<path d="M7 13.4h9.2a3 3 0 0 0 .4-6 4.3 4.3 0 0 0-8.3-1.2A3 3 0 0 0 7 13.4z"></path><path d="M9 16.2l-.7 2.4M12 16.2l-.7 2.4M15 16.2l-.7 2.4"></path>'),
+    snow: svg('<path d="M7 13.2h9.2a3 3 0 0 0 .4-6 4.3 4.3 0 0 0-8.3-1.2A3 3 0 0 0 7 13.2z"></path><path d="M9 16.2v2.3M8 17.35h2M12 16.2v2.3M11 17.35h2M15 16.2v2.3M14 17.35h2"></path>'),
+    storm: svg('<path d="M7 12.6h9.2a3 3 0 0 0 .4-6 4.3 4.3 0 0 0-8.3-1.2A3 3 0 0 0 7 12.6z"></path><path d="M11.3 13.4 9.6 16.6h2.4L10.4 20"></path>')
+  };
+
+  function iconName(code, isDay) {
+    var night = isDay === 0;
+    if (code === 0 || code === 1) return night ? "moon" : "sun";
+    if (code === 2) return night ? "nightPartly" : "partly";
+    if (code === 3) return "cloud";
+    if (code === 45 || code === 48) return "fog";
+    if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snow";
+    if (code >= 95) return "storm";
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "rain";
+    return "cloud";
+  }
+
+  function labelFor(code) {
+    return Object.prototype.hasOwnProperty.call(LABELS, code) ? LABELS[code] : "Unknown";
+  }
+
+  function deg(n) {
+    return Math.round(n) + "°";
+  }
+
+  function weekdayFromIso(iso) {
+    var parts = iso.split("-");
+    var y = +parts[0];
+    var m = +parts[1];
+    var d = +parts[2];
+    return WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  }
+
+  var hasData = false;
+  var message = document.getElementById("message");
+  var messageText = document.getElementById("messageText");
+  var content = document.getElementById("content");
+
+  function showMessage(text) {
+    messageText.textContent = text;
+    message.hidden = false;
+    content.hidden = true;
+  }
+
+  function render(data) {
+    var current = data.current;
+    var daily = data.daily;
+    var code = current.weather_code;
+    var name = iconName(code, current.is_day);
+
+    document.getElementById("temp").textContent = deg(current.temperature_2m);
+    document.getElementById("cond").textContent = labelFor(code);
+    document.getElementById("nowIcon").innerHTML = ICONS[name];
+    document.getElementById("feels").textContent = "Feels like " + deg(current.apparent_temperature);
+    document.getElementById("wind").textContent = "Wind " + Math.round(current.wind_speed_10m) + " mph";
+    document.getElementById("todayHl").textContent =
+      "Today " + deg(daily.temperature_2m_max[0]) + " / " + deg(daily.temperature_2m_min[0]);
+    document.getElementById("todayPop").textContent =
+      "Precip " + Math.round(daily.precipitation_probability_max[0]) + "%";
+
+    var grid = document.getElementById("days");
+    grid.replaceChildren();
+    for (var i = 0; i < 7; i++) {
+      var dayCode = daily.weather_code[i];
+      var dayName = weekdayFromIso(daily.time[i]);
+      var hi = deg(daily.temperature_2m_max[i]);
+      var lo = deg(daily.temperature_2m_min[i]);
+      var pop = Math.round(daily.precipitation_probability_max[i]) + "%";
+
+      var card = document.createElement("div");
+      card.className = "day" + (i === 0 ? " today" : "");
+      card.setAttribute("aria-label", dayName + ", " + labelFor(dayCode) + ", high " + hi + ", low " + lo + ", " + pop + " chance of precipitation");
+
+      var dow = document.createElement("div");
+      dow.className = "dow";
+      dow.textContent = dayName;
+
+      var icon = document.createElement("div");
+      icon.className = "icon";
+      icon.innerHTML = ICONS[iconName(dayCode, 1)];
+
+      var hiEl = document.createElement("div");
+      hiEl.className = "hi";
+      hiEl.textContent = hi;
+
+      var loEl = document.createElement("div");
+      loEl.className = "lo";
+      loEl.textContent = lo;
+
+      var popEl = document.createElement("div");
+      popEl.className = "pop";
+      popEl.textContent = pop;
+
+      card.append(dow, icon, hiEl, loEl, popEl);
+      grid.appendChild(card);
+    }
+
+    hasData = true;
+    message.hidden = true;
+    content.hidden = false;
+  }
+
+  function fail() {
+    if (hasData) return;
+    showMessage("Weather is unavailable right now. Trying again in 30 minutes.");
+  }
+
+  function load() {
+    fetch(ENDPOINT, { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || !data.current || !data.daily || !data.daily.time || data.daily.time.length < 7) {
+          throw new Error("incomplete forecast");
+        }
+        render(data);
+      })
+      .catch(function () {
+        fail();
+      });
+  }
+
+  load();
+  setInterval(load, REFRESH_MS);
+})();
+</script>
+</body>
+</html>
