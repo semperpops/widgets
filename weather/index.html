@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- weather-widget v3 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -48,40 +49,39 @@
     margin-top: 6px;
   }
 
-  .place-select {
+  .places {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .place {
     appearance: none;
     -webkit-appearance: none;
-    color-scheme: dark;
-    background-color: var(--bg);
-    color: var(--gold);
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     line-height: 1.2;
-    border: 1px solid var(--gold-dim);
-    border-radius: 6px;
-    padding: 4px 26px 4px 8px;
-    min-height: 28px;
-    width: auto;
-    max-width: 100%;
-    align-self: flex-start;
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    padding: 0 12px;
+    min-height: 32px;
     cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d4af37' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 10px 7px;
+    touch-action: manipulation;
   }
 
-  .place-select:focus {
+  .place[aria-pressed="true"] {
+    color: var(--gold);
+    background: rgba(212, 175, 55, 0.14);
+    border-color: var(--gold-dim);
+  }
+
+  .place:focus-visible {
     outline: 2px solid var(--gold);
     outline-offset: 2px;
-  }
-
-  .place-select option {
-    background: var(--bg);
-    color: var(--text);
-    font-weight: 600;
   }
 
   .top-row {
@@ -290,28 +290,26 @@
     .day .lo { font-size: 10px; }
     .day .icon svg { width: 18px; height: 18px; }
     .meta span { white-space: normal; }
-    .place-select {
-      font-size: 14px;
-      min-height: 40px;
-      width: 100%;
-      align-self: stretch;
-      padding: 6px 30px 6px 10px;
+    .place {
+      font-size: 13px;
+      min-height: 36px;
+      padding: 0 12px;
     }
   }
 </style>
 </head>
 <body>
   <div class="bar" id="widget" role="region" aria-label="Weather forecast">
+    <div class="places" id="places" role="group" aria-label="Location">
+      <button type="button" class="place" data-id="spotsylvania" data-lat="38.2010" data-lon="-77.5892" data-tz="America/New_York" aria-pressed="true">Spotsylvania, VA</button>
+      <button type="button" class="place" data-id="gretna" data-lat="36.9537" data-lon="-79.3589" data-tz="America/New_York" aria-pressed="false">Gretna, VA</button>
+      <button type="button" class="place" data-id="rexburg" data-lat="43.8260" data-lon="-111.7897" data-tz="America/Boise" aria-pressed="false">Rexburg, ID</button>
+      <button type="button" class="place" data-id="lejeune" data-lat="34.6397" data-lon="-77.3418" data-tz="America/New_York" aria-pressed="false">Camp Lejeune, NC</button>
+      <button type="button" class="place" data-id="charleston" data-lat="32.7763" data-lon="-79.9327" data-tz="America/New_York" aria-pressed="false">Charleston, SC</button>
+      <button type="button" class="place" data-id="tulsa" data-lat="36.1540" data-lon="-95.9928" data-tz="America/Chicago" aria-pressed="false">Tulsa, OK</button>
+    </div>
     <div class="top-row">
       <div class="now solo" id="now">
-        <select id="location" class="place-select" aria-label="Location">
-          <option value="spotsylvania" data-lat="38.2010" data-lon="-77.5892" data-tz="America/New_York" selected>Spotsylvania, VA</option>
-          <option value="gretna" data-lat="36.9537" data-lon="-79.3589" data-tz="America/New_York">Gretna, VA</option>
-          <option value="rexburg" data-lat="43.8260" data-lon="-111.7897" data-tz="America/Boise">Rexburg, ID</option>
-          <option value="lejeune" data-lat="34.6397" data-lon="-77.3418" data-tz="America/New_York">Camp Lejeune, NC</option>
-          <option value="charleston" data-lat="32.7763" data-lon="-79.9327" data-tz="America/New_York">Charleston, SC</option>
-          <option value="tulsa" data-lat="36.1540" data-lon="-95.9928" data-tz="America/Chicago">Tulsa, OK</option>
-        </select>
         <div id="details" hidden>
           <div class="temp-row">
             <div class="temp" id="temp">—</div>
@@ -434,7 +432,8 @@
   var hasData = false;
   var loadedId = null;
   var requestId = 0;
-  var select = document.getElementById("location");
+  var placesEl = document.getElementById("places");
+  var placeButtons = placesEl.querySelectorAll(".place");
   var message = document.getElementById("message");
   var messageText = document.getElementById("messageText");
   var details = document.getElementById("details");
@@ -442,15 +441,31 @@
   var now = document.getElementById("now");
   var widget = document.getElementById("widget");
 
-  function currentPlace() {
-    var opt = select.options[select.selectedIndex];
+  function placeFromButton(btn) {
     return {
-      id: opt.value,
-      label: opt.textContent,
-      lat: opt.getAttribute("data-lat"),
-      lon: opt.getAttribute("data-lon"),
-      tz: opt.getAttribute("data-tz")
+      id: btn.getAttribute("data-id"),
+      label: btn.textContent,
+      lat: btn.getAttribute("data-lat"),
+      lon: btn.getAttribute("data-lon"),
+      tz: btn.getAttribute("data-tz")
     };
+  }
+
+  function currentPlace() {
+    for (var i = 0; i < placeButtons.length; i++) {
+      if (placeButtons[i].getAttribute("aria-pressed") === "true") return placeFromButton(placeButtons[i]);
+    }
+    return placeFromButton(placeButtons[0]);
+  }
+
+  function selectPlace(id) {
+    var matched = false;
+    for (var i = 0; i < placeButtons.length; i++) {
+      var on = placeButtons[i].getAttribute("data-id") === id;
+      if (on) matched = true;
+      placeButtons[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    if (!matched) placeButtons[0].setAttribute("aria-pressed", "true");
   }
 
   function endpoint(place) {
@@ -576,18 +591,24 @@
 
   try {
     var saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      for (var i = 0; i < select.options.length; i++) {
-        if (select.options[i].value === saved) {
-          select.value = saved;
-          break;
-        }
-      }
-    }
+    if (saved) selectPlace(saved);
   } catch (e) {}
 
-  select.addEventListener("change", function () {
-    remember(select.value);
+  placesEl.addEventListener("click", function (event) {
+    var node = event.target;
+    var btn = null;
+    while (node && node !== placesEl) {
+      if (node.classList && node.classList.contains("place")) {
+        btn = node;
+        break;
+      }
+      node = node.parentNode;
+    }
+    if (!btn) return;
+    var id = btn.getAttribute("data-id");
+    if (id === currentPlace().id) return;
+    selectPlace(id);
+    remember(id);
     hasData = false;
     loadedId = null;
     showMessage("Loading forecast…");
