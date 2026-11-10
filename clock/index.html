@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SemperPops Clock</title>
+<title>World Clock</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -48,7 +48,9 @@
   }
 
   .brand-date {
-    flex: 0 1 260px;
+    flex: 0 1 auto;
+    width: max-content;
+    max-width: 100%;
     min-width: 200px;
     display: flex;
     flex-direction: column;
@@ -58,16 +60,8 @@
     border-right: 1px solid var(--divider);
   }
 
-  .brand {
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--gold);
-    font-weight: 700;
-  }
-
   .date-line {
-    font-size: 15px;
+    font-size: 30px;
     font-weight: 600;
     line-height: 1.25;
     color: var(--text);
@@ -228,16 +222,15 @@
       letter-spacing: 0.04em;
     }
     .clock .time { font-size: 13px; }
-    .date-line { font-size: 14px; }
+    .date-line { font-size: 28px; }
     .progress { max-width: none; }
   }
 </style>
 </head>
 <body>
-  <div class="bar" role="region" aria-label="SemperPops world clocks">
+  <div class="bar" role="region" aria-label="World clocks">
     <div class="top-row">
       <div class="brand-date">
-        <div class="brand">SemperPops</div>
         <div class="date-line" id="dateLine">—</div>
         <div class="rayday-row">
           <div class="rayday" id="rayday">Rayday — / —</div>
