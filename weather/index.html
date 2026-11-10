@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Spotsylvania Weather</title>
+<title>Weather</title>
 <style>
   :root {
     --bg: #1a1a1a;
@@ -40,26 +40,48 @@
     width: 100%;
   }
 
-  .message {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 4px;
-    min-height: 72px;
-  }
-
   .message p {
     font-size: 15px;
     font-weight: 600;
     line-height: 1.35;
     color: var(--text);
+    margin-top: 6px;
   }
 
-  .place {
+  .place-select {
+    appearance: none;
+    -webkit-appearance: none;
+    color-scheme: dark;
+    background-color: var(--bg);
+    color: var(--gold);
+    font-family: inherit;
     font-size: 12px;
     font-weight: 700;
-    color: var(--gold);
     letter-spacing: 0.02em;
+    line-height: 1.2;
+    border: 1px solid var(--gold-dim);
+    border-radius: 6px;
+    padding: 4px 26px 4px 8px;
+    min-height: 28px;
+    width: auto;
+    max-width: 100%;
+    align-self: flex-start;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d4af37' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px 7px;
+  }
+
+  .place-select:focus {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  .place-select option {
+    background: var(--bg);
+    color: var(--text);
+    font-weight: 600;
   }
 
   .top-row {
@@ -79,6 +101,13 @@
     gap: 4px;
     padding-right: 14px;
     border-right: 1px solid var(--divider);
+  }
+
+  .now.solo {
+    border-right: none;
+    border-bottom: none;
+    padding-right: 0;
+    padding-bottom: 0;
   }
 
   .temp-row {
@@ -261,35 +290,49 @@
     .day .lo { font-size: 10px; }
     .day .icon svg { width: 18px; height: 18px; }
     .meta span { white-space: normal; }
+    .place-select {
+      font-size: 14px;
+      min-height: 40px;
+      width: 100%;
+      align-self: stretch;
+      padding: 6px 30px 6px 10px;
+    }
   }
 </style>
 </head>
 <body>
-  <div class="bar" role="region" aria-label="Weather for Spotsylvania, Virginia">
-    <div class="message" id="message" role="status">
-      <div class="place">Spotsylvania, VA</div>
-      <p id="messageText">Loading forecast…</p>
-    </div>
-
-    <div class="top-row" id="content" hidden>
-      <div class="now">
-        <div class="place">Spotsylvania, VA</div>
-        <div class="temp-row">
-          <div class="temp" id="temp">—</div>
-          <div class="cond-wrap">
-            <div class="icon" id="nowIcon"></div>
-            <div class="cond" id="cond">—</div>
+  <div class="bar" id="widget" role="region" aria-label="Weather forecast">
+    <div class="top-row">
+      <div class="now solo" id="now">
+        <select id="location" class="place-select" aria-label="Location">
+          <option value="spotsylvania" data-lat="38.2010" data-lon="-77.5892" data-tz="America/New_York" selected>Spotsylvania, VA</option>
+          <option value="gretna" data-lat="36.9537" data-lon="-79.3589" data-tz="America/New_York">Gretna, VA</option>
+          <option value="rexburg" data-lat="43.8260" data-lon="-111.7897" data-tz="America/Boise">Rexburg, ID</option>
+          <option value="lejeune" data-lat="34.6397" data-lon="-77.3418" data-tz="America/New_York">Camp Lejeune, NC</option>
+          <option value="charleston" data-lat="32.7763" data-lon="-79.9327" data-tz="America/New_York">Charleston, SC</option>
+          <option value="tulsa" data-lat="36.1540" data-lon="-95.9928" data-tz="America/Chicago">Tulsa, OK</option>
+        </select>
+        <div id="details" hidden>
+          <div class="temp-row">
+            <div class="temp" id="temp">—</div>
+            <div class="cond-wrap">
+              <div class="icon" id="nowIcon"></div>
+              <div class="cond" id="cond">—</div>
+            </div>
+          </div>
+          <div class="meta">
+            <span id="feels">Feels like —</span>
+            <span id="wind">Wind —</span>
+            <span id="todayHl">Today —</span>
+            <span id="todayPop">Precip —</span>
           </div>
         </div>
-        <div class="meta">
-          <span id="feels">Feels like —</span>
-          <span id="wind">Wind —</span>
-          <span id="todayHl">Today —</span>
-          <span id="todayPop">Precip —</span>
+        <div class="message" id="message" role="status">
+          <p id="messageText">Loading forecast…</p>
         </div>
       </div>
 
-      <div class="forecast">
+      <div class="forecast" id="forecast" hidden>
         <div class="forecast-head">
           <div class="group-label">Forecast</div>
           <a class="credit" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
@@ -300,9 +343,8 @@
   </div>
 
   <noscript>
-    <div class="bar" role="region" aria-label="Weather for Spotsylvania, Virginia">
+    <div class="bar" role="region" aria-label="Weather forecast">
       <div class="message">
-        <div class="place">Spotsylvania, VA</div>
         <p>Weather needs JavaScript to load the forecast.</p>
       </div>
     </div>
@@ -310,21 +352,9 @@
 
 <script>
 (function () {
-  var LAT = 38.20;
-  var LON = -77.59;
   var REFRESH_MS = 30 * 60 * 1000;
+  var STORAGE_KEY = "weather-location";
   var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  var ENDPOINT = "https://api.open-meteo.com/v1/forecast"
-    + "?latitude=" + LAT
-    + "&longitude=" + LON
-    + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"
-    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
-    + "&timezone=America%2FNew_York"
-    + "&temperature_unit=fahrenheit"
-    + "&wind_speed_unit=mph"
-    + "&precipitation_unit=inch"
-    + "&forecast_days=7";
 
   var LABELS = {
     0: "Clear",
@@ -402,14 +432,53 @@
   }
 
   var hasData = false;
+  var loadedId = null;
+  var requestId = 0;
+  var select = document.getElementById("location");
   var message = document.getElementById("message");
   var messageText = document.getElementById("messageText");
-  var content = document.getElementById("content");
+  var details = document.getElementById("details");
+  var forecast = document.getElementById("forecast");
+  var now = document.getElementById("now");
+  var widget = document.getElementById("widget");
+
+  function currentPlace() {
+    var opt = select.options[select.selectedIndex];
+    return {
+      id: opt.value,
+      label: opt.textContent,
+      lat: opt.getAttribute("data-lat"),
+      lon: opt.getAttribute("data-lon"),
+      tz: opt.getAttribute("data-tz")
+    };
+  }
+
+  function endpoint(place) {
+    return "https://api.open-meteo.com/v1/forecast"
+      + "?latitude=" + encodeURIComponent(place.lat)
+      + "&longitude=" + encodeURIComponent(place.lon)
+      + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"
+      + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+      + "&timezone=" + encodeURIComponent(place.tz)
+      + "&temperature_unit=fahrenheit"
+      + "&wind_speed_unit=mph"
+      + "&precipitation_unit=inch"
+      + "&forecast_days=7";
+  }
 
   function showMessage(text) {
     messageText.textContent = text;
     message.hidden = false;
-    content.hidden = true;
+    details.hidden = true;
+    forecast.hidden = true;
+    now.classList.add("solo");
+  }
+
+  function showData() {
+    message.hidden = true;
+    details.hidden = false;
+    forecast.hidden = false;
+    now.classList.remove("solo");
   }
 
   function render(data) {
@@ -466,31 +535,64 @@
     }
 
     hasData = true;
-    message.hidden = true;
-    content.hidden = false;
+    loadedId = currentPlace().id;
+    widget.setAttribute("aria-label", "Weather for " + currentPlace().label);
+    showData();
   }
 
   function fail() {
-    if (hasData) return;
+    if (hasData && loadedId === currentPlace().id) return;
     showMessage("Weather is unavailable right now. Trying again in 30 minutes.");
   }
 
   function load() {
-    fetch(ENDPOINT, { cache: "no-store" })
+    var place = currentPlace();
+    var myId = ++requestId;
+    widget.setAttribute("aria-label", "Weather for " + place.label);
+    fetch(endpoint(place), { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
         return res.json();
       })
       .then(function (data) {
+        if (myId !== requestId) return;
         if (!data || !data.current || !data.daily || !data.daily.time || data.daily.time.length < 7) {
           throw new Error("incomplete forecast");
+        }
+        if (data.timezone && data.timezone !== place.tz) {
+          throw new Error("unexpected timezone");
         }
         render(data);
       })
       .catch(function () {
+        if (myId !== requestId) return;
         fail();
       });
   }
+
+  function remember(id) {
+    try { localStorage.setItem(STORAGE_KEY, id); } catch (e) {}
+  }
+
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      for (var i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === saved) {
+          select.value = saved;
+          break;
+        }
+      }
+    }
+  } catch (e) {}
+
+  select.addEventListener("change", function () {
+    remember(select.value);
+    hasData = false;
+    loadedId = null;
+    showMessage("Loading forecast…");
+    load();
+  });
 
   load();
   setInterval(load, REFRESH_MS);
